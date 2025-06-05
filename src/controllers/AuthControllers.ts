@@ -23,8 +23,7 @@ export const createUser = async (req: Request, res: Response): Promise<any> => {
     expiresIn: "1h",
   });
 
-  // Send email
-  const link = `http://localhost:3000/api/auth/verify?token=${token}`;
+  const link = `${process.env.BACKEND_URL}/api/auth/verify?token=${token}`;
   await sendVerificationEmail(email, link);
 
   res
@@ -44,9 +43,45 @@ export const verifyEmail = async (
       data: { verified: true },
     });
 
-    // Redirect to frontend dashboard
-    res.redirect(`http://localhost:5173/dashboard?token=${token}`);
+    res.redirect(`${process.env.FRONTEND_URL}/dashboard?token=${token}`);
   } catch (err) {
     res.status(400).send("Invalid or expired token");
+  }
+};
+
+export const loginUser = async (req: Request, res: Response): Promise<any> => {
+  const { email, password } = req.body;
+
+  try {
+    const user = await prisma.user.findUnique({ where: { email } });
+    if (!user) {
+      return res.status(400).json({ message: "Invalid email or password" });
+    }
+
+    if (!user.verified) {
+      return res
+        .status(403)
+        .json({ message: "Please verify your email first" });
+    }
+    const validPassword = await bcrypt.compare(password, user.password);
+    if (!validPassword) {
+      return res.status(400).json({ message: "Invalid email or password" });
+    }
+
+    const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET!, {
+      expiresIn: "1h",
+    });
+
+    res.status(200).json({
+      message: "Login successful",
+      token,
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+      },
+    });
+  } catch (err) {
+    res.status(500).json({ message: "Server error", error: err });
   }
 };
