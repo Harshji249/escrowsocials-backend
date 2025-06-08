@@ -7,7 +7,7 @@ import { sendVerificationEmail } from "../utils/EmailVerification";
 const prisma = new PrismaClient();
 
 export const createUser = async (req: Request, res: Response): Promise<any> => {
-  const { name, email, password }: any = req.body;
+  const { name, email, password, transactionId }: any = req.body;
 
   const existing = await prisma.user.findUnique({ where: { email } });
   if (existing)
@@ -16,19 +16,46 @@ export const createUser = async (req: Request, res: Response): Promise<any> => {
   const hashed = await bcrypt.hash(password, 10);
 
   const user = await prisma.user.create({
-    data: { name, email, password: hashed },
+    data: {
+      name,
+      email,
+      password: hashed,
+      ...(transactionId && { verified: true }),
+    },
   });
 
   const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET!, {
     expiresIn: "1h",
   });
 
-  const link = `${process.env.BACKEND_URL}/api/auth/verify?token=${token}`;
-  await sendVerificationEmail(email, link);
-
-  res
-    .status(201)
-    .json({ message: "Signup successful, please verify your email." });
+  if (transactionId) {
+    const escrow = await prisma.escrow.findFirst({
+      where: { id: transactionId },
+    });
+    await prisma.escrow.update({
+      where: { id: escrow?.id },
+      data: {
+        onboarding: true,
+        buyerId: user.id,
+      },
+    });
+    res.status(200).json({
+      token,
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      },
+      message: "Signup successful.",
+    });
+  } else {
+    const link = `${process.env.BACKEND_URL}/api/auth/verify?token=${token}`;
+    await sendVerificationEmail(email, link);
+    res
+      .status(201)
+      .json({ message: "Signup successful, please verify your email." });
+  }
 };
 
 export const verifyEmail = async (
