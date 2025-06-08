@@ -144,3 +144,32 @@ export const userDashboard = async (
       .json({ message: "Server Error", error: error.message });
   }
 };
+
+export const getTransactionById = async (
+  req: Request,
+  res: Response
+): Promise<any> => {
+  try {
+    const { id } = req.query;
+
+    if (!id) return res.status(400).json({ message: "Email is required" });
+    const data = await prisma.escrow.findFirst({
+      where: {
+        id: +id,
+      },
+      include: {
+        seller: true,
+        buyer: true,
+      },
+    });
+    return res.status(200).json({
+      data,
+      message: "Escrow stats fetched successfully",
+    });
+  } catch (error: any) {
+    console.error(error);
+    return res
+      .status(500)
+      .json({ message: "Server Error", error: error.message });
+  }
+};
