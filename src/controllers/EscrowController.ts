@@ -50,14 +50,15 @@ export const fetchUserEscrow = async (
   res: Response
 ): Promise<any> => {
   try {
-    const { email } = req.query;
+    const { email, type } = req.query;
+    const active = type === "active" ? true : false;
     const [asSeller, asBuyer] = await Promise.all([
       prisma.escrow.findMany({
-        where: { seller: { email: email as string } },
+        where: { seller: { email: email as string }, active },
         include: { seller: true, buyer: true },
       }),
       prisma.escrow.findMany({
-        where: { buyer: { email: email as string } },
+        where: { buyer: { email: email as string }, active },
         include: { seller: true, buyer: true },
       }),
     ]);
@@ -69,5 +70,77 @@ export const fetchUserEscrow = async (
     });
   } catch (error: any) {
     throw new Error(error);
+  }
+};
+
+export const userDashboard = async (
+  req: Request,
+  res: Response
+): Promise<any> => {
+  try {
+    const { email } = req.query;
+
+    if (!email) return res.status(400).json({ message: "Email is required" });
+
+    const totalActive = await prisma.escrow.count({
+      where: {
+        active: true,
+        OR: [
+          { seller: { email: email as string } },
+          { buyer: { email: email as string } },
+        ],
+      },
+    });
+
+    const totalPast = await prisma.escrow.count({
+      where: {
+        active: false,
+        OR: [
+          { seller: { email: email as string } },
+          { buyer: { email: email as string } },
+        ],
+      },
+    });
+
+    const groupedByMonth = await prisma.escrow.groupBy({
+      by: ["createdAt"],
+      where: {
+        OR: [
+          { seller: { email: email as string } },
+          { buyer: { email: email as string } },
+        ],
+      },
+      _count: { _all: true },
+      orderBy: { createdAt: "asc" },
+    });
+
+    const escrowsPerMonth = groupedByMonth.reduce((acc, entry) => {
+      const year = entry.createdAt.getFullYear();
+      const monthName = entry.createdAt.toLocaleString("default", {
+        month: "short",
+      });
+      const key = `${year} ${monthName}`;
+      acc[key] = (acc[key] || 0) + entry._count._all;
+      return acc;
+    }, {} as Record<string, number>);
+
+    const formattedData = Object.entries(escrowsPerMonth).map(
+      ([key, count]) => ({
+        name: key,
+        escrows: count,
+      })
+    );
+
+    return res.status(200).json({
+      totalActiveEscrows: totalActive,
+      totalPastEscrows: totalPast,
+      escrowsPerMonth: formattedData,
+      message: "Escrow stats fetched successfully",
+    });
+  } catch (error: any) {
+    console.error(error);
+    return res
+      .status(500)
+      .json({ message: "Server Error", error: error.message });
   }
 };

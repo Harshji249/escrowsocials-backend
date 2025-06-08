@@ -1,10 +1,14 @@
 import express from "express";
-import { createEscrow, fetchUserEscrow } from "../controllers/EscrowController";
+import {
+  createEscrow,
+  fetchUserEscrow,
+  userDashboard,
+} from "../controllers/EscrowController";
 
 const router = express.Router();
 
 router.post("/create", createEscrow);
 router.get("/", fetchUserEscrow);
-// router.post("/login", loginUser);
+router.get("/dashboard", userDashboard);
 
 export default router;
