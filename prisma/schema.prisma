@@ -1,45 +1,40 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
-generator client {
-  provider = "prisma-client-js"
-}
-
 model User {
-  id        Int      @id @default(autoincrement())
-  name      String
-  email     String   @unique
-  password  String
-  role      String?
-  verified  Boolean  @default(false)
-  createdAt DateTime @default(now())
-
-  sellerEscrows Escrow[]  @relation("SellerRelation")
-  buyerEscrows  Escrow[]  @relation("BuyerRelation")
+  id            Int      @id @default(autoincrement())
+  name          String
+  email         String   @unique
+  createdAt     DateTime @default(now())
+  password      String
+  verified      Boolean  @default(false)
+  role          String?
+  buyerEscrows  Escrow[] @relation("BuyerRelation")
+  sellerEscrows Escrow[] @relation("SellerRelation")
 }
 
 model Escrow {
-  id            Int        @id @default(autoincrement())
+  id            Int       @id @default(autoincrement())
   price         Float
   accountType   String
   accountName   String
   comissionType String
-  status        Int        @default(0)
+  status        Int       @default(0)
   fundedAt      DateTime?
   releasedAt    DateTime?
-  createdAt     DateTime   @default(now())
-  updatedAt     DateTime   @updatedAt
-  onboarding    Boolean    @default(false) 
-  active        Boolean    @default(true) 
-
-  // Foreign keys
-  sellerId     Int
-  seller       User      @relation("SellerRelation", fields: [sellerId], references: [id])
-
-  // Relations
-  buyerId      Int?
-  buyer        User?      @relation("BuyerRelation", fields: [buyerId], references: [id])
-  buyerEmail   String? 
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  onboarding    Boolean   @default(false)
+  active        Boolean   @default(true)
+  sellerId      Int
+  buyerId       Int?
+  buyerEmail    String?
+  buyer         User?     @relation("BuyerRelation", fields: [buyerId], references: [id])
+  seller        User      @relation("SellerRelation", fields: [sellerId], references: [id])
 }
