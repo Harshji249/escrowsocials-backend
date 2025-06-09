@@ -24,7 +24,7 @@ export const createUser = async (req: Request, res: Response): Promise<any> => {
     },
   });
 
-  const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET!, {
+  const token = jwt.sign(user, process.env.JWT_SECRET!, {
     expiresIn: "1h",
   });
 
@@ -95,7 +95,7 @@ export const loginUser = async (req: Request, res: Response): Promise<any> => {
       return res.status(400).json({ message: "Invalid password" });
     }
 
-    const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET!, {
+    const token = jwt.sign(user, process.env.JWT_SECRET!, {
       expiresIn: "1h",
     });
 

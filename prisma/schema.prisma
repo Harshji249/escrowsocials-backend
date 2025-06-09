@@ -15,8 +15,22 @@ model User {
   password      String
   verified      Boolean  @default(false)
   role          String?
+  profileUrl    String?
   buyerEscrows  Escrow[] @relation("BuyerRelation")
   sellerEscrows Escrow[] @relation("SellerRelation")
+  bankInfo      BankInfo? @relation("BankRelation")
+}
+
+model BankInfo {
+  id            Int       @id @default(autoincrement())
+  accountEmail  String
+  accountHolder String
+  address       String
+  city          String
+  postalCode    String
+  country       String
+  userId        Int     @unique
+  user          User    @relation("BankRelation",fields: [userId], references: [id])
 }
 
 model Escrow {
