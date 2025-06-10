@@ -38,7 +38,7 @@ export const sendVerificationEmail = async (email: string, link: string) => {
 
   try {
     await transporter.sendMail({
-      from: `"EscrowSocials" <${process.env.EMAIL_FROM}>`,
+      from: process.env.EMAIL_FROM,
       to: email,
       subject: "Confirm your email with EscrowSocials",
       html: htmlContent,

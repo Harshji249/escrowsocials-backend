@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 
-export const fetchuser = async (req: any, res: Response, next: NextFunction) => {
+export const fetchuser = async (req: any, res: any, next: any) => {
   const token = req.header("Authorization")?.replace("Bearer ", "");
   if (!token) {
     console.log("No token provided in Authorization header");
@@ -14,7 +14,7 @@ export const fetchuser = async (req: any, res: Response, next: NextFunction) => 
       console.log("Invalid token payload:", payload);
       return res.status(401).json({ message: "Invalid token payload" });
     }
-    req.user = { id: payload.id, email: payload.email };
+    req.user = { id: payload.id, email: payload.email, role: payload.role };
     console.log("User authenticated:", req.user);
     next();
   } catch (error: any) {

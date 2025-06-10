@@ -70,7 +70,7 @@ export const verifyEmail = async (
       data: { verified: true },
     });
 
-    res.redirect(`${process.env.FRONTEND_URL}/dashboard?token=${token}`);
+    res.redirect(`${process.env.FRONTEND_URL}/login`);
   } catch (err) {
     res.status(400).send("Invalid or expired token");
   }
@@ -106,6 +106,7 @@ export const loginUser = async (req: Request, res: Response): Promise<any> => {
         id: user.id,
         name: user.name,
         email: user.email,
+        role: user.role,
       },
     });
   } catch (err) {

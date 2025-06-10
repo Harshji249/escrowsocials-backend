@@ -8,19 +8,17 @@ datasource db {
 }
 
 model User {
-  id               Int       @id @default(autoincrement())
-  name             String
-  email            String    @unique
-  createdAt        DateTime  @default(now())
-  password         String
-  verified         Boolean   @default(false)
-  role             String?
-  profileUrl       String?
-  buyerEscrows     Escrow[]  @relation("BuyerRelation")
-  sellerEscrows    Escrow[]  @relation("SellerRelation")
-  bankInfo         BankInfo? @relation("BankRelation")
-  sentMessages     Message[] @relation("SentMessages")
-  receivedMessages Message[] @relation("ReceivedMessages")
+  id            Int       @id @default(autoincrement())
+  name          String
+  email         String    @unique
+  createdAt     DateTime  @default(now())
+  password      String
+  verified      Boolean   @default(false)
+  role          String?
+  profileUrl    String?
+  bankInfo      BankInfo? @relation("BankRelation")
+  buyerEscrows  Escrow[]  @relation("BuyerRelation")
+  sellerEscrows Escrow[]  @relation("SellerRelation")
 }
 
 model BankInfo {
@@ -40,33 +38,17 @@ model Escrow {
   price         Float
   accountType   String
   accountName   String
-  comissionType String
-  status        Int       @default(0)
   fundedAt      DateTime?
   releasedAt    DateTime?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
-  onboarding    Boolean   @default(false)
-  active        Boolean   @default(true)
   sellerId      Int
   buyerId       Int?
+  comissionType String
+  onboarding    Boolean   @default(false)
+  status        Int       @default(0)
   buyerEmail    String?
-  messages      Message[]
+  active        Boolean   @default(true)
   buyer         User?     @relation("BuyerRelation", fields: [buyerId], references: [id])
   seller        User      @relation("SellerRelation", fields: [sellerId], references: [id])
 }
-
-model Message {
-  id         Int      @id @default(autoincrement())
-  content    String
-  senderId   Int
-  receiverId Int
-  escrowId   Int // 👈 Add this
-  createdAt  DateTime @default(now())
-
-  sender   User   @relation("SentMessages", fields: [senderId], references: [id])
-  receiver User   @relation("ReceivedMessages", fields: [receiverId], references: [id])
-  escrow   Escrow @relation(fields: [escrowId], references: [id]) 
-}
-
-

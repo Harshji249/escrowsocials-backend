@@ -5,12 +5,13 @@ import {
   getTransactionById,
   userDashboard,
 } from "../controllers/EscrowController";
+import { fetchuser } from "../middlewares/fetchuser";
 
 const router = express.Router();
 
-router.post("/create", createEscrow);
-router.get("/", fetchUserEscrow);
-router.get("/dashboard", userDashboard);
-router.get("/transaction", getTransactionById);
+router.post("/create", fetchuser, createEscrow);
+router.get("/", fetchuser, fetchUserEscrow);
+router.get("/dashboard", fetchuser, userDashboard);
+router.get("/transaction", fetchuser, getTransactionById);
 
 export default router;

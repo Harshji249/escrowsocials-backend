@@ -10,6 +10,9 @@ export const getDashboardData = async (
   res: Response
 ): Promise<any> => {
   try {
+    if (req.user.role !== "admin") {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
     const escrowCounts = await prisma.escrow.groupBy({
       by: ["active"],
       _count: {
@@ -64,7 +67,9 @@ export const fetchAllEscrows = async (
 
     // Validate type parameter
     if (type !== "active" && type !== "past") {
-      res.status(400).json({ message: "Invalid type parameter. Use 'active' or 'past'." });
+      res
+        .status(400)
+        .json({ message: "Invalid type parameter. Use 'active' or 'past'." });
       return;
     }
 
@@ -89,5 +94,25 @@ export const fetchAllEscrows = async (
   }
 };
 
-
-
+export const updateStep = async (req: any, res: Response): Promise<any> => {
+  try {
+    // if (req.user.role !== "admin") {
+    //   return res.status(401).json({ message: "Unauthorized" });
+    // }
+    const escrow = await prisma.escrow.findFirst({
+      where: { id: req.body.transaction },
+    });
+    if (!escrow) return;
+    await prisma.escrow.update({
+      where: { id: escrow.id },
+      data: {
+        status: req.body.step,
+      },
+    });
+    return res.status(200).json({
+      message: "Step updated successfully",
+    });
+  } catch (error: any) {
+    throw new Error(error);
+  }
+};
