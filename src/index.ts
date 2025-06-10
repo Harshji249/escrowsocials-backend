@@ -5,6 +5,8 @@ import dotenv from "dotenv";
 import bodyParser from "body-parser";
 import cors from "cors";
 import { PrismaClient } from "@prisma/client";
+import uploadRoutes from "./routes/upload";
+import messageRoutes from "./routes/message";
 
 // Routes
 import authRoutes from "./routes/auth";
@@ -97,6 +99,10 @@ app.use("/api/auth", authRoutes);
 app.use("/api/escrow", escrowRoutes);
 app.use("/api/settings", settingRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/upload", uploadRoutes);
+app.use("/api/message", messageRoutes);
+
+
 
 // Start server
 server.listen(PORT, () => {
