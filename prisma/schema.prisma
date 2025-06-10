@@ -8,29 +8,31 @@ datasource db {
 }
 
 model User {
-  id            Int      @id @default(autoincrement())
-  name          String
-  email         String   @unique
-  createdAt     DateTime @default(now())
-  password      String
-  verified      Boolean  @default(false)
-  role          String?
-  profileUrl    String?
-  buyerEscrows  Escrow[] @relation("BuyerRelation")
-  sellerEscrows Escrow[] @relation("SellerRelation")
-  bankInfo      BankInfo? @relation("BankRelation")
+  id               Int       @id @default(autoincrement())
+  name             String
+  email            String    @unique
+  createdAt        DateTime  @default(now())
+  password         String
+  verified         Boolean   @default(false)
+  role             String?
+  profileUrl       String?
+  buyerEscrows     Escrow[]  @relation("BuyerRelation")
+  sellerEscrows    Escrow[]  @relation("SellerRelation")
+  bankInfo         BankInfo? @relation("BankRelation")
+  sentMessages     Message[] @relation("SentMessages")
+  receivedMessages Message[] @relation("ReceivedMessages")
 }
 
 model BankInfo {
-  id            Int       @id @default(autoincrement())
+  id            Int    @id @default(autoincrement())
   accountEmail  String
   accountHolder String
   address       String
   city          String
   postalCode    String
   country       String
-  userId        Int     @unique
-  user          User    @relation("BankRelation",fields: [userId], references: [id])
+  userId        Int    @unique
+  user          User   @relation("BankRelation", fields: [userId], references: [id])
 }
 
 model Escrow {
@@ -49,6 +51,22 @@ model Escrow {
   sellerId      Int
   buyerId       Int?
   buyerEmail    String?
+  messages      Message[]
   buyer         User?     @relation("BuyerRelation", fields: [buyerId], references: [id])
   seller        User      @relation("SellerRelation", fields: [sellerId], references: [id])
 }
+
+model Message {
+  id         Int      @id @default(autoincrement())
+  content    String
+  senderId   Int
+  receiverId Int
+  escrowId   Int // 👈 Add this
+  createdAt  DateTime @default(now())
+
+  sender   User   @relation("SentMessages", fields: [senderId], references: [id])
+  receiver User   @relation("ReceivedMessages", fields: [receiverId], references: [id])
+  escrow   Escrow @relation(fields: [escrowId], references: [id]) 
+}
+
+

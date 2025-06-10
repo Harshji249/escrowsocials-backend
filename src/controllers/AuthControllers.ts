@@ -1,6 +1,6 @@
+import { Request, Response } from "express";
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
-import { Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import { sendVerificationEmail } from "../utils/EmailVerification";
 

@@ -54,3 +54,40 @@ export const verifyEmail = async (
     res.status(400).send("Invalid or expired token");
   }
 };
+
+export const fetchAllEscrows = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const { type } = req.query;
+
+    // Validate type parameter
+    if (type !== "active" && type !== "past") {
+      res.status(400).json({ message: "Invalid type parameter. Use 'active' or 'past'." });
+      return;
+    }
+
+    const isActive = type === "active" ? true : false;
+
+    const escrows = await prisma.escrow.findMany({
+      where: { active: isActive },
+      include: {
+        seller: { select: { id: true, name: true, email: true } },
+        buyer: { select: { id: true, name: true, email: true } },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+
+    res.status(200).json({
+      data: escrows,
+      message: `Successfully fetched ${type} escrows`,
+    });
+  } catch (error: any) {
+    console.error("❌ Error fetching escrows:", error);
+    res.status(500).json({ message: "Server Error", error: error.message });
+  }
+};
+
+
+
