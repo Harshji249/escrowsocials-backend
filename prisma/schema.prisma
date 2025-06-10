@@ -19,6 +19,8 @@ model User {
   bankInfo      BankInfo? @relation("BankRelation")
   buyerEscrows  Escrow[]  @relation("BuyerRelation")
   sellerEscrows Escrow[]  @relation("SellerRelation")
+  messagesSent     Message[] @relation("MessagesSent")
+  messagesReceived Message[] @relation("MessagesReceived")
 }
 
 model BankInfo {
@@ -51,4 +53,19 @@ model Escrow {
   active        Boolean   @default(true)
   buyer         User?     @relation("BuyerRelation", fields: [buyerId], references: [id])
   seller        User      @relation("SellerRelation", fields: [sellerId], references: [id])
+  
 }
+
+model Message {
+  id         Int      @id @default(autoincrement())
+  content    String
+  senderId   Int
+  receiverId Int
+  escrowId   Int
+  createdAt  DateTime @default(now())
+
+  sender     User     @relation("MessagesSent", fields: [senderId], references: [id])
+  receiver   User     @relation("MessagesReceived", fields: [receiverId], references: [id])
+ 
+}
+
