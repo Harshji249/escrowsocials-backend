@@ -107,6 +107,7 @@ export const updateStep = async (req: any, res: Response): Promise<any> => {
       where: { id: escrow.id },
       data: {
         status: req.body.step,
+        active: req.body.step === 4 ? false : true,
       },
     });
     return res.status(200).json({
