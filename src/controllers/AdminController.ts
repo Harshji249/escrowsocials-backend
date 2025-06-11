@@ -26,12 +26,15 @@ export const getDashboardData = async (
       },
       { active: 0, inactive: 0 }
     );
+     const adminUser = await prisma.user.findFirst({
+      where: { role: "admin" },
+    });
 
     return res.status(201).json({
       data: {
         active: counts.active,
         past: counts.inactive,
-        comission: 0,
+        comission: adminUser?.commission || 0,
       },
       message: "Escrow created successfully",
     });
@@ -102,14 +105,36 @@ export const updateStep = async (req: any, res: Response): Promise<any> => {
     const escrow = await prisma.escrow.findFirst({
       where: { id: req.body.transaction },
     });
-    if (!escrow) return;
-    await prisma.escrow.update({
+    
+    if (!escrow) return res.status(404).json({ message: "Escrow not found" });
+
+    const updatedEscrow = await prisma.escrow.update({
       where: { id: escrow.id },
       data: {
         status: req.body.step,
         active: req.body.step === 4 ? false : true,
       },
     });
+
+
+    if (req.body.step === 4) {
+      const commission = updatedEscrow.price * 0.04;
+
+      const adminUser = await prisma.user.findFirst({
+        where: { role: "admin" },
+      });
+
+      if (adminUser) {
+        await prisma.user.update({
+          where: { id: adminUser.id },
+          data: {
+            commission: {
+              increment: commission,
+            },
+          },
+        });
+      }
+    }
     return res.status(200).json({
       message: "Step updated successfully",
     });
