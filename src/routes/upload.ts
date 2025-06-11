@@ -1,59 +1,56 @@
-// routes/upload.ts
-import express from "express";
+import express, { Request, Response } from "express";
 import multer from "multer";
-import cloudinary from "../utils/cloudinary";
 import { PrismaClient } from "@prisma/client";
-import { fetchuser } from "../middlewares/fetchuser"; // ← do not change
-
+import { fetchuser } from "../middlewares/fetchuser";
+import cloudinary from "../utils/cloudinary";
 
 const prisma = new PrismaClient();
 const router = express.Router();
 
-// Use memory storage so we can send buffer to Cloudinary
-const upload = multer({ storage: multer.memoryStorage() });
+const storage = multer.memoryStorage();
+const upload = multer({ storage });
 
-router.post("/upload-id", fetchuser, upload.single("file"), function (req, res) {
-  (async () => {
-    try {
-      const user = (req as any).user;
-      const file = (req as any).file;
+router.post("/upload-id", fetchuser, upload.single("file"), (req: Request, res: Response) => {
+  const user = (req as any).user;
+  const file = req.file;
 
-      if (!file) {
-        return res.status(400).json({ message: "No file uploaded" });
+  if (!file) {
+    res.status(400).json({ message: "No file uploaded" });
+    return; // <-- 🔴 this was missing, adding it fixes the error
+  }
+
+  const uploadStream = cloudinary.uploader.upload_stream(
+    {
+      folder: "escrow_ids",
+      resource_type: "image",
+    },
+    (error, result) => {
+      if (error || !result) {
+        console.error("Cloudinary error:", error);
+        res.status(500).json({ message: "Cloudinary upload failed" });
+        return; // 🔴 required
       }
 
-      const stream = cloudinary.uploader.upload_stream(
-        {
-          folder: "user_ids",
-          resource_type: "image",
-        },
-        async (error, result) => {
-          if (error || !result) {
-            console.error("Cloudinary error:", error);
-            return res.status(500).json({ message: "Upload failed" });
-          }
-
-          await prisma.user.update({
-            where: { id: user.id },
-            data: { profileUrl: result.secure_url },
-          });
-
-          return res.status(200).json({
-            message: "Image uploaded and saved",
+      prisma.user.update({
+        where: { id: user.id },
+        data: { profileUrl: result.secure_url },
+      })
+        .then(() => {
+          res.status(200).json({
+            message: "ID uploaded to Cloudinary",
             profileUrl: result.secure_url,
           });
-        }
-      );
-
-      // Pipe buffer into the Cloudinary stream
-      const { Readable } = await import("stream");
-      Readable.from(file.buffer).pipe(stream);
-    } catch (err: any) {
-      console.error("Upload error:", err.message);
-      return res.status(500).json({ message: "Internal server error" });
+          return; // ✅ ensures response is returned
+        })
+        .catch((dbErr) => {
+          console.error("DB update error:", dbErr.message);
+          res.status(500).json({ message: "Database update failed" });
+          return;
+        });
     }
-  })();
-});
+  );
 
+  uploadStream.end(file.buffer);
+});
 
 export default router;

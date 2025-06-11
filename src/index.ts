@@ -13,6 +13,7 @@ import authRoutes from "./routes/auth";
 import escrowRoutes from "./routes/escrow";
 import settingRoutes from "./routes/settings";
 import adminRoutes from "./routes/admin";
+import path from "path";
 
 dotenv.config();
 const app = express();
@@ -61,8 +62,9 @@ app.use("/api/auth", authRoutes);
 app.use("/api/escrow", escrowRoutes);
 app.use("/api/settings", settingRoutes);
 app.use("/api/admin", adminRoutes);
-app.use("/api/upload", uploadRoutes);
 app.use("/api/messages", messageRoutes);
+app.use("/api/upload", uploadRoutes);
+
 
 // Start server
 server.listen(PORT, () => {
