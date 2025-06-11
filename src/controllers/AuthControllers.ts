@@ -106,6 +106,7 @@ export const loginUser = async (req: Request, res: Response): Promise<any> => {
         id: user.id,
         name: user.name,
         email: user.email,
+         role: user.role, 
       },
     });
   } catch (err) {
